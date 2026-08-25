@@ -40,6 +40,9 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
               '--travel-x': `${selected.travel.x}px`,
               '--travel-y': `${selected.travel.y}px`,
               '--travel-scale': selected.travel.scale,
+              '--origin-left': `${selected.origin.left}px`,
+              '--origin-top': `${selected.origin.top}px`,
+              '--origin-width': `${selected.origin.width}px`,
             }
           : {}),
       }}
@@ -53,6 +56,8 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
           origin: {
             x: bounds.left + bounds.width / 2,
             y: bounds.top + bounds.height / 2,
+            left: bounds.left,
+            top: bounds.top,
             width: bounds.width,
             height: bounds.height,
           },
@@ -92,6 +97,8 @@ export default function Wall({ muro = null, marcas = true }) {
   }
 
   useEffect(() => {
+    document.body.classList.toggle('viewer-open', Boolean(selected))
+
     if (!selected) return undefined
 
     const closeOnEscape = (event) => {
@@ -100,7 +107,10 @@ export default function Wall({ muro = null, marcas = true }) {
 
     document.addEventListener('keydown', closeOnEscape)
     closeButtonRef.current?.focus()
-    return () => document.removeEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.body.classList.remove('viewer-open')
+    }
   }, [selected])
 
   useLayoutEffect(() => {
@@ -181,7 +191,12 @@ export default function Wall({ muro = null, marcas = true }) {
               ref={closeButtonRef}
               type="button"
               className={`${styles.close} ${arrived ? '' : styles.controlHidden}`}
-              onClick={closeViewer}
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                closeViewer()
+              }}
+              onClick={(event) => event.stopPropagation()}
               aria-label="Cerrar obra"
             >
               <span aria-hidden="true">×</span>
