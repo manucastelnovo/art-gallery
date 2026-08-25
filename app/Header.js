@@ -8,7 +8,7 @@ import styles from './Header.module.css'
  * Ver scripts/ y dibujos/fotosmarceserieloscoloresdelasombra.
  */
 const ITEMS = [
-  { label: 'Home', href: '/', src: '/nav/home.png', ar: 2.725 },
+  // { label: 'Home', href: '/', src: '/nav/home.p ng', ar: 2.725 },
   // { label: 'About me', href: '/about', src: '/nav/about.png', ar: 5.427 },
   // { label: 'Gallery', href: '/gallery', src: '/nav/gallery.png', ar: 4.454 },
 ]

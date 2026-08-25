@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PIECES } from './wall-data'
 import { MOTION } from './wall-motion'
 import { MARKS } from './wall-marks'
@@ -16,14 +16,13 @@ import styles from './Wall.module.css'
  *
  * Los parámetros de movimiento de cada uno están en wall-motion.js.
  */
-function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion }) {
+function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, selected }) {
   const [swinging, setSwinging] = useState(false)
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      className={`${styles.piece} ${swinging ? `${styles.swinging} ${styles[motion.ritmo]}` : ''}`}
+    <button
+      type="button"
+      className={`${styles.piece} ${selected ? styles.hiddenPiece : ''} ${swinging ? `${styles.swinging} ${styles[motion.ritmo]}` : ''}`}
       style={{
         left: `${left}%`,
         top: `${top}%`,
@@ -39,12 +38,69 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion }) {
       }}
       onPointerEnter={() => setSwinging(true)}
       onAnimationEnd={() => setSwinging(false)}
-      draggable={false}
-    />
+      onClick={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect()
+        onSelect({
+          src,
+          alt,
+          origin: {
+            x: bounds.left + bounds.width / 2,
+            y: bounds.top + bounds.height / 2,
+            width: bounds.width,
+            rotation: rot,
+          },
+        })
+      }}
+      aria-label={`Ver obra: ${alt}`}
+    >
+      <img src={src} alt="" draggable={false} />
+    </button>
   )
 }
 
 export default function Wall({ muro = null, marcas = true }) {
+  const [selected, setSelected] = useState(null)
+  const [closing, setClosing] = useState(false)
+  const [arrived, setArrived] = useState(false)
+  const closeButtonRef = useRef(null)
+  const closeTimerRef = useRef(null)
+
+  const finishClose = () => {
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = null
+    setSelected(null)
+    setArrived(false)
+    setClosing(false)
+  }
+
+  const closeViewer = () => {
+    if (!selected || closing) return
+    setArrived(true)
+    setClosing(true)
+    closeTimerRef.current = window.setTimeout(finishClose, 1400)
+  }
+
+  const viewerStyle = selected
+    ? {
+        '--origin-x': `${selected.origin.x - window.innerWidth / 2}px`,
+        '--origin-y': `${selected.origin.y - window.innerHeight / 2}px`,
+        '--origin-scale': selected.origin.width / Math.min(window.innerWidth * 0.88, 608),
+        '--origin-rotate': `${selected.origin.rotation}deg`,
+      }
+    : undefined
+
+  useEffect(() => {
+    if (!selected) return undefined
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') closeViewer()
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    closeButtonRef.current?.focus()
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [selected])
+
   return (
     <div
       className={styles.wall}
@@ -75,10 +131,61 @@ export default function Wall({ muro = null, marcas = true }) {
             ))}
 
           {PIECES.map((p, i) => (
-            <Piece key={p.src} {...p} motion={MOTION[i]} />
+            <Piece
+              key={p.src}
+              {...p}
+              motion={MOTION[i]}
+              onSelect={(work) => {
+                if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+                setClosing(false)
+                setArrived(false)
+                setSelected(work)
+              }}
+              selected={selected?.src === p.src && arrived}
+            />
           ))}
         </div>
       </div>
+      {selected && (
+        <div
+          className={`${styles.viewer} ${arrived ? styles.viewerReady : ''} ${closing ? styles.viewerClosing : ''}`}
+          style={viewerStyle}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeViewer()
+          }}
+        >
+          <section className={styles.selectedWork} role="dialog" aria-modal="true" aria-label="Obra seleccionada">
+            <button
+              ref={closeButtonRef}
+              type="button"
+              className={`${styles.close} ${arrived ? '' : styles.controlHidden}`}
+              onClick={closeViewer}
+              aria-label="Cerrar obra"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+            <div className={styles.artFrame}>
+              <img
+                className={closing ? styles.returning : ''}
+                src={selected.src}
+                alt={selected.alt}
+                onAnimationEnd={() => {
+                  if (closing) {
+                    finishClose()
+                  } else {
+                    setArrived(true)
+                  }
+                }}
+              />
+            </div>
+            <div className={`${styles.description} ${arrived ? styles.descriptionReady : ''}`}>
+              <span className={styles.kicker}>Obra seleccionada</span>
+              <p>{selected.alt}</p>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
