@@ -1,0 +1,153 @@
+.wall {
+  position: fixed;
+  /* Llega hasta arriba: el header flota encima sin fondo propio, así la pared
+     se ve a través de él. */
+  inset: 0;
+  overflow: hidden;
+  /*
+   * La pared es lienzo, no un color: la trama sale del borde sin pintar de la
+   * portada de la serie. Encima, una sola luz, con la posicion medida sobre
+   * "sin nombre" -- la obra que cuelga aca al lado y que es, justamente, una
+   * pintura de cuadros colgados con la luz cruzandolos.
+   */
+  background-color: var(--pared);
+  background-image:
+    radial-gradient(ellipse 95% 85% at 84% -14%,
+      rgba(255, 246, 226, 0.34), rgba(255, 246, 226, 0) 62%),
+    linear-gradient(207deg,
+      rgba(28, 22, 16, 0) 32%, rgba(28, 22, 16, 0.26) 100%),
+    url('/wall/lienzo.webp');
+  background-size: auto, auto, 108px 108px;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+
+/*
+ * El lienzo cubre toda la pantalla, pero los cuadros cuelgan solo por debajo
+ * del header: si se centraran contra el alto completo, en pantallas anchas el
+ * primero quedaba a 8 px del nav.
+ */
+.hang {
+  position: absolute;
+  inset: calc(var(--header-h) + 1.25rem) 0 0 0;
+}
+
+/*
+ * La pared conserva su proporción y entra entera: si se recortara, habría
+ * cuadros colgados fuera de alcance que no se podrían tocar.
+ */
+.inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  aspect-ratio: 2400 / 1350;
+  /* Las sombras se miden en cqw para que escalen con la pared. */
+  container-type: inline-size;
+}
+
+@media (min-aspect-ratio: 2400 / 1350) {
+  .inner { height: 100%; }
+}
+
+@media (max-aspect-ratio: 2400 / 1350) {
+  .inner { width: 100%; }
+}
+
+/*
+ * Las manchas: pintura que quedo en la pared antes de colgar nada. Van detras
+ * de las obras y no reciben el mouse, son parte del muro.
+ */
+.mark {
+  position: absolute;
+  display: block;
+  height: auto;
+  rotate: var(--rot);
+  opacity: var(--op);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  user-select: none;
+}
+
+.piece {
+  position: absolute;
+  display: block;
+  height: auto;
+  rotate: var(--rest);
+  /*
+   * El clavo. Todo cuadro colgado gira alrededor del punto del que cuelga, no
+   * de su centro — y no todos cuelgan del mismo lugar: los que tienen el clavo
+   * corrido a un costado giran de forma visiblemente distinta.
+   */
+  transform-origin: var(--nail);
+  /*
+   * Sombra propia, no una igual para todos: direccion y largo salen de donde
+   * cuelga cada cuadro respecto de la luz. `--lift` la alarga cuando el cuadro
+   * se despega de la pared durante el vaiven.
+   */
+  filter: drop-shadow(
+    calc(var(--sx) * 1cqw * (1 + var(--lift) * 0.6))
+    calc(var(--sy) * 1cqw * (1 + var(--lift) * 0.6))
+    calc(var(--sb) * 1cqw * (1 + var(--lift) * 0.9))
+    rgba(32, 25, 18, 0.5)
+  );
+  will-change: rotate, filter;
+}
+
+/* Registrado para que interpole suave; sin esto saltaria de 0 a 1. */
+@property --lift {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.swinging {
+  animation-duration: var(--dur);
+  animation-timing-function: cubic-bezier(0.33, 0, 0.24, 1);
+}
+
+/*
+ * El ritmo va por clase, no por variable: CSS Modules renombra los @keyframes,
+ * así que `animation-name: var(--algo)` nunca encontraría la animación.
+ */
+.corto { animation-name: corto; }
+.medio { animation-name: medio; }
+.lento { animation-name: lento; }
+
+/*
+ * Tres péndulos amortiguados. Todos salen del ángulo de reposo y vuelven
+ * exactamente a él; cambia cuántas veces rebotan y con qué ritmo.
+ * `--amp` los escala y `--dir` decide hacia qué lado sale el primer golpe.
+ */
+@keyframes corto {
+  0%   { rotate: var(--rest); --lift: 0; }
+  14%  { rotate: calc(var(--rest) + 1.35deg * var(--amp) * var(--dir)); --lift: 1.0; }
+  38%  { rotate: calc(var(--rest) - 0.72deg * var(--amp) * var(--dir)); --lift: 0.61; }
+  64%  { rotate: calc(var(--rest) + 0.3deg * var(--amp) * var(--dir)); --lift: 0.19; }
+  86%  { rotate: calc(var(--rest) - 0.1deg * var(--amp) * var(--dir)); --lift: 0.0; }
+  100% { rotate: var(--rest); --lift: 0; }
+}
+
+@keyframes medio {
+  0%   { rotate: var(--rest); --lift: 0; }
+  11%  { rotate: calc(var(--rest) + 1.5deg * var(--amp) * var(--dir)); --lift: 0.95; }
+  29%  { rotate: calc(var(--rest) - 0.95deg * var(--amp) * var(--dir)); --lift: 0.76; }
+  48%  { rotate: calc(var(--rest) + 0.55deg * var(--amp) * var(--dir)); --lift: 0.45; }
+  67%  { rotate: calc(var(--rest) - 0.28deg * var(--amp) * var(--dir)); --lift: 0.15; }
+  85%  { rotate: calc(var(--rest) + 0.12deg * var(--amp) * var(--dir)); --lift: 0.0; }
+  100% { rotate: var(--rest); --lift: 0; }
+}
+
+@keyframes lento {
+  0%   { rotate: var(--rest); --lift: 0; }
+  9%   { rotate: calc(var(--rest) + 1.6deg * var(--amp) * var(--dir)); --lift: 0.92; }
+  24%  { rotate: calc(var(--rest) - 1.05deg * var(--amp) * var(--dir)); --lift: 0.84; }
+  40%  { rotate: calc(var(--rest) + 0.68deg * var(--amp) * var(--dir)); --lift: 0.58; }
+  56%  { rotate: calc(var(--rest) - 0.42deg * var(--amp) * var(--dir)); --lift: 0.32; }
+  72%  { rotate: calc(var(--rest) + 0.24deg * var(--amp) * var(--dir)); --lift: 0.06; }
+  87%  { rotate: calc(var(--rest) - 0.1deg * var(--amp) * var(--dir)); --lift: 0.0; }
+  100% { rotate: var(--rest); --lift: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swinging { animation: none; }
+}

@@ -1,4 +1,5 @@
 import Header from './Header'
+import Wall from './Wall'
 import './globals.css'
 
 export const metadata = {
@@ -10,6 +11,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body>
         <Header />
+        <Wall />
         {children}
       </body>
     </html>

@@ -1,10 +1,11 @@
 :root {
-  /* Muestreados de su propia pintura (dibujos/header.png) */
+  /* Muestreados de su propia pintura */
   --negro: #151410;
   --naranja: #9a5e2d;
+  --pared: #8e867c;
 
-  /* Una sola fuente para el alto del header: la usan la barra y el fondo,
-     así el collage entra justo debajo y nunca queda tapado. */
+  /* Una sola fuente para el alto del header: la usan la barra y la pared,
+     así los cuadros entran justo debajo y ninguno queda tapado. */
   --nav-item-h: clamp(1.4rem, 2.6vw, 2.1rem);
   --header-pad: 1.75rem;
   --header-h: calc(var(--nav-item-h) + var(--header-pad) * 2);
@@ -18,9 +19,7 @@
 
 html {
   min-height: 100%;
-  /* El gris de la pared del propio cuadro: lo que rodea al collage cuando no
-     llega a cubrir la pantalla, y el color de reserva mientras carga. */
-  background: #8e867c;
+  background: var(--pared);
 }
 
 body {
@@ -28,32 +27,10 @@ body {
   background: transparent;
 }
 
-/*
- * El collage va en un pseudo-elemento fijo, no en background-attachment: fixed,
- * que en Safari de iOS no funciona y da saltos al scrollear.
- */
-body::before {
-  content: '';
-  position: fixed;
-  inset: var(--header-h) 0 0 0;
-  z-index: -1;
-  background-image: image-set(
-    url('/bg/collage-1400.webp') 1x,
-    url('/bg/collage-2000.webp') 2x
-  );
-  background-position: center;
-  background-repeat: no-repeat;
-  /* El collage es apaisado (16:9): en pantallas anchas llena sin recortar casi
-     nada. */
-  background-size: cover;
-}
-
-/* En vertical, `cover` dejaría fuera cuatro de las ocho obras. Ahí conviene
-   verlo entero aunque sobre pared arriba y abajo. */
-@media (orientation: portrait) {
-  body::before {
-    background-size: contain;
-  }
+/* El contenido va sobre la pared; los cuadros quedan tocables donde no lo tape. */
+main {
+  position: relative;
+  z-index: 1;
 }
 
 .sr-only {

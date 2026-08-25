@@ -1,5 +1,10 @@
 .header {
-  
+  /* Sin fondo: flota sobre la pared y deja ver la pintura detrás. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
   height: var(--header-h);
   display: flex;
   align-items: center;
