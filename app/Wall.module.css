@@ -42,7 +42,6 @@
   translate: -50% -50%;
   aspect-ratio: 2400 / 1350;
   /* Las sombras se miden en cqw para que escalen con la pared. */
-  container-type: inline-size;
 }
 
 @media (min-aspect-ratio: 2400 / 1350) {
@@ -89,9 +88,9 @@
    * se despega de la pared durante el vaiven.
    */
   filter: drop-shadow(
-    calc(var(--sx) * 1cqw * (1 + var(--lift) * 0.6))
-    calc(var(--sy) * 1cqw * (1 + var(--lift) * 0.6))
-    calc(var(--sb) * 1cqw * (1 + var(--lift) * 0.9))
+    calc(var(--sx) * 1vw * (1 + var(--lift) * 0.6))
+    calc(var(--sy) * 1vw * (1 + var(--lift) * 0.6))
+    calc(var(--sb) * 1vw * (1 + var(--lift) * 0.9))
     rgba(32, 25, 18, 0.5)
   );
   will-change: rotate, filter;
@@ -108,9 +107,15 @@
   outline-offset: 8px;
 }
 
-.hiddenPiece {
-  opacity: 0;
+.lifted {
+  z-index: 1001;
   pointer-events: none;
+  transform-origin: center center;
+  animation: liftToViewer 1.4s linear both;
+}
+
+.returningPiece {
+  animation-direction: reverse;
 }
 
 .viewer {
@@ -125,8 +130,16 @@
 
 .viewerReady {
   background: rgba(12, 10, 8, 0.82);
-  backdrop-filter: blur(5px);
   animation: viewerIn 240ms ease-out both;
+}
+
+.hasViewer .inner {
+  z-index: 1001;
+}
+
+.hasViewer .piece:not(.lifted),
+.hasViewer .mark {
+  opacity: 0;
 }
 
 .viewerClosing {
@@ -147,20 +160,7 @@
   display: grid;
   place-items: center;
   width: min(100%, 38rem);
-  min-height: 12rem;
-}
-
-.artFrame img {
-  display: block;
-  width: 100%;
   max-height: 63vh;
-  object-fit: contain;
-  filter: drop-shadow(0 1.5rem 2rem rgba(0, 0, 0, 0.55));
-  animation: artFromWall 1.4s linear both;
-}
-
-.artFrame img.returning {
-  animation-direction: reverse;
 }
 
 .description {
@@ -231,17 +231,17 @@
   to { opacity: 1; }
 }
 
-@keyframes artFromWall {
+@keyframes liftToViewer {
   from {
-    transform: translate(var(--origin-x), var(--origin-y)) scale(var(--origin-scale)) rotate(var(--origin-rotate));
+    transform: translate(0, 0) scale(1) rotate(0deg);
   }
   35% {
-    transform: translate(calc(var(--origin-x) * 0.7), calc(var(--origin-y) * 0.74)) scale(calc(var(--origin-scale) * 1.04)) rotate(calc(var(--origin-rotate) + 2deg));
+    transform: translate(calc(var(--travel-x) * 0.7), calc(var(--travel-y) * 0.74)) scale(calc(var(--travel-scale) * 1.04)) rotate(2deg);
   }
   68% {
-    transform: translate(calc(var(--origin-x) * 0.18), calc(var(--origin-y) * 0.15)) scale(1.015) rotate(0.8deg);
+    transform: translate(calc(var(--travel-x) * 0.18), calc(var(--travel-y) * 0.15)) scale(calc(var(--travel-scale) * 1.015)) rotate(0.8deg);
   }
-  to { transform: translate(0, 0) scale(1) rotate(0deg); }
+  to { transform: translate(var(--travel-x), var(--travel-y)) scale(var(--travel-scale)) rotate(0deg); }
 }
 
 @keyframes descriptionIn {

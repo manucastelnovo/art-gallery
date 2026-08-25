@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { PIECES } from './wall-data'
 import { MOTION } from './wall-motion'
 import { MARKS } from './wall-marks'
@@ -22,7 +22,7 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
   return (
     <button
       type="button"
-      className={`${styles.piece} ${selected ? styles.hiddenPiece : ''} ${swinging ? `${styles.swinging} ${styles[motion.ritmo]}` : ''}`}
+      className={`${styles.piece} ${selected?.travel ? `${styles.lifted} ${selected.closing ? styles.returningPiece : ''}` : ''} ${swinging ? `${styles.swinging} ${styles[motion.ritmo]}` : ''}`}
       style={{
         left: `${left}%`,
         top: `${top}%`,
@@ -35,6 +35,13 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
         '--sx': sx,
         '--sy': sy,
         '--sb': sb,
+        ...(selected?.travel
+          ? {
+              '--travel-x': `${selected.travel.x}px`,
+              '--travel-y': `${selected.travel.y}px`,
+              '--travel-scale': selected.travel.scale,
+            }
+          : {}),
       }}
       onPointerEnter={() => setSwinging(true)}
       onAnimationEnd={() => setSwinging(false)}
@@ -47,7 +54,7 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
             x: bounds.left + bounds.width / 2,
             y: bounds.top + bounds.height / 2,
             width: bounds.width,
-            rotation: rot,
+            height: bounds.height,
           },
         })
       }}
@@ -62,7 +69,9 @@ export default function Wall({ muro = null, marcas = true }) {
   const [selected, setSelected] = useState(null)
   const [closing, setClosing] = useState(false)
   const [arrived, setArrived] = useState(false)
+  const [travel, setTravel] = useState(null)
   const closeButtonRef = useRef(null)
+  const artFrameRef = useRef(null)
   const closeTimerRef = useRef(null)
 
   const finishClose = () => {
@@ -71,23 +80,16 @@ export default function Wall({ muro = null, marcas = true }) {
     setSelected(null)
     setArrived(false)
     setClosing(false)
+    setTravel(null)
   }
 
   const closeViewer = () => {
     if (!selected || closing) return
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
     setArrived(true)
     setClosing(true)
     closeTimerRef.current = window.setTimeout(finishClose, 1400)
   }
-
-  const viewerStyle = selected
-    ? {
-        '--origin-x': `${selected.origin.x - window.innerWidth / 2}px`,
-        '--origin-y': `${selected.origin.y - window.innerHeight / 2}px`,
-        '--origin-scale': selected.origin.width / Math.min(window.innerWidth * 0.88, 608),
-        '--origin-rotate': `${selected.origin.rotation}deg`,
-      }
-    : undefined
 
   useEffect(() => {
     if (!selected) return undefined
@@ -101,9 +103,24 @@ export default function Wall({ muro = null, marcas = true }) {
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [selected])
 
+  useLayoutEffect(() => {
+    if (!selected || !artFrameRef.current) return undefined
+
+    const frame = artFrameRef.current.getBoundingClientRect()
+    setTravel({
+      x: frame.left + frame.width / 2 - selected.origin.x,
+      y: frame.top + frame.height / 2 - selected.origin.y,
+      scale: Math.min(
+        frame.width / selected.origin.width,
+        (window.innerHeight * 0.63) / selected.origin.height,
+      ),
+    })
+    return undefined
+  }, [selected])
+
   return (
     <div
-      className={styles.wall}
+      className={`${styles.wall} ${selected && arrived ? styles.hasViewer : ''}`}
       style={muro ? { '--muro': `url(${muro})` } : undefined}
     >
       <div className={styles.hang}>
@@ -139,9 +156,14 @@ export default function Wall({ muro = null, marcas = true }) {
                 if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
                 setClosing(false)
                 setArrived(false)
-                setSelected(work)
+                setTravel(null)
+                setSelected({ ...work, closing: false })
+                closeTimerRef.current = window.setTimeout(() => {
+                  setArrived(true)
+                  closeTimerRef.current = null
+                }, 1400)
               }}
-              selected={selected?.src === p.src && arrived}
+              selected={selected?.src === p.src ? { ...selected, closing, travel } : null}
             />
           ))}
         </div>
@@ -149,7 +171,6 @@ export default function Wall({ muro = null, marcas = true }) {
       {selected && (
         <div
           className={`${styles.viewer} ${arrived ? styles.viewerReady : ''} ${closing ? styles.viewerClosing : ''}`}
-          style={viewerStyle}
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeViewer()
@@ -165,20 +186,12 @@ export default function Wall({ muro = null, marcas = true }) {
             >
               <span aria-hidden="true">×</span>
             </button>
-            <div className={styles.artFrame}>
-              <img
-                className={closing ? styles.returning : ''}
-                src={selected.src}
-                alt={selected.alt}
-                onAnimationEnd={() => {
-                  if (closing) {
-                    finishClose()
-                  } else {
-                    setArrived(true)
-                  }
-                }}
-              />
-            </div>
+            <div
+              className={styles.artFrame}
+              ref={artFrameRef}
+              style={{ aspectRatio: `${selected.origin.width} / ${selected.origin.height}` }}
+              aria-hidden="true"
+            />
             <div className={`${styles.description} ${arrived ? styles.descriptionReady : ''}`}>
               <span className={styles.kicker}>Obra seleccionada</span>
               <p>{selected.alt}</p>
