@@ -6,6 +6,8 @@
   /* la caja de referencia: todo lo demás se mide en em contra esto */
   font-size: clamp(1.5rem, 3vw, 2.3rem);
   height: 1.15em;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .espacio {
@@ -57,5 +59,11 @@
     animation: none;
     -webkit-mask-position: 0 0, 0 0;
     mask-position: 0 0, 0 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .titulo {
+    max-width: min(76vw, 22rem);
   }
 }

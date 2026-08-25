@@ -21,11 +21,13 @@
 html {
   min-height: 100%;
   background: var(--pared);
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
   background: transparent;
+  overflow-x: hidden;
 }
 
 /* El contenido va sobre la pared; los cuadros quedan tocables donde no lo tape. */

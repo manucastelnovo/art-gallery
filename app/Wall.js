@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PIECES } from './wall-data'
 import { MOTION } from './wall-motion'
 import { MARKS } from './wall-marks'
@@ -22,7 +22,7 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
   return (
     <button
       type="button"
-      className={`${styles.piece} ${selected?.travel ? `${styles.lifted} ${selected.closing ? styles.returningPiece : ''}` : ''} ${swinging ? `${styles.swinging} ${styles[motion.ritmo]}` : ''}`}
+      className={`${styles.piece} ${selected?.travel ? `${styles.lifted} ${selected.closing ? styles.returningPiece : ''}` : ''} ${swinging && !selected ? `${styles.swinging} ${styles[motion.ritmo]}` : ''}`}
       style={{
         left: `${left}%`,
         top: `${top}%`,
@@ -46,7 +46,9 @@ function Piece({ src, alt, left, top, width, rot, sx, sy, sb, motion, onSelect, 
             }
           : {}),
       }}
-      onPointerEnter={() => setSwinging(true)}
+      onPointerEnter={() => {
+        if (!selected) setSwinging(true)
+      }}
       onAnimationEnd={() => setSwinging(false)}
       onClick={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect()
@@ -75,8 +77,6 @@ export default function Wall({ muro = null, marcas = true }) {
   const [closing, setClosing] = useState(false)
   const [arrived, setArrived] = useState(false)
   const [travel, setTravel] = useState(null)
-  const closeButtonRef = useRef(null)
-  const artFrameRef = useRef(null)
   const closeTimerRef = useRef(null)
 
   const finishClose = () => {
@@ -96,6 +96,10 @@ export default function Wall({ muro = null, marcas = true }) {
     closeTimerRef.current = window.setTimeout(finishClose, 1400)
   }
 
+  useEffect(() => () => {
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+  }, [])
+
   useEffect(() => {
     document.body.classList.toggle('viewer-open', Boolean(selected))
 
@@ -106,31 +110,15 @@ export default function Wall({ muro = null, marcas = true }) {
     }
 
     document.addEventListener('keydown', closeOnEscape)
-    closeButtonRef.current?.focus()
     return () => {
       document.removeEventListener('keydown', closeOnEscape)
       document.body.classList.remove('viewer-open')
     }
   }, [selected])
 
-  useLayoutEffect(() => {
-    if (!selected || !artFrameRef.current) return undefined
-
-    const frame = artFrameRef.current.getBoundingClientRect()
-    setTravel({
-      x: frame.left + frame.width / 2 - selected.origin.x,
-      y: frame.top + frame.height / 2 - selected.origin.y,
-      scale: Math.min(
-        frame.width / selected.origin.width,
-        (window.innerHeight * 0.63) / selected.origin.height,
-      ),
-    })
-    return undefined
-  }, [selected])
-
   return (
     <div
-      className={`${styles.wall} ${selected && arrived ? styles.hasViewer : ''}`}
+      className={`${styles.wall} ${selected && arrived ? styles.hasViewer : ''} ${selected && !arrived ? styles.transitioning : ''}`}
       style={muro ? { '--muro': `url(${muro})` } : undefined}
     >
       <div className={styles.hang}>
@@ -163,10 +151,21 @@ export default function Wall({ muro = null, marcas = true }) {
               {...p}
               motion={MOTION[i]}
               onSelect={(work) => {
+                if (selected || closing) return
                 if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+                const maxWidth = Math.min(window.innerWidth * (window.innerWidth <= 600 ? 0.86 : 0.82), 576)
+                const maxHeight = window.innerHeight * (window.innerWidth <= 600 ? 0.5 : 0.56)
+                const scale = Math.min(
+                  maxWidth / work.origin.width,
+                  maxHeight / work.origin.height,
+                )
                 setClosing(false)
                 setArrived(false)
-                setTravel(null)
+                setTravel({
+                  x: window.innerWidth / 2 - work.origin.x,
+                  y: window.innerHeight / 2 - work.origin.y,
+                  scale,
+                })
                 setSelected({ ...work, closing: false })
                 closeTimerRef.current = window.setTimeout(() => {
                   setArrived(true)
@@ -183,28 +182,16 @@ export default function Wall({ muro = null, marcas = true }) {
           className={`${styles.viewer} ${arrived ? styles.viewerReady : ''} ${closing ? styles.viewerClosing : ''}`}
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeViewer()
+            if (arrived && event.target === event.currentTarget) closeViewer()
           }}
         >
           <section className={styles.selectedWork} role="dialog" aria-modal="true" aria-label="Obra seleccionada">
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className={`${styles.close} ${arrived ? '' : styles.controlHidden}`}
-              onPointerDown={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                closeViewer()
-              }}
-              onClick={(event) => event.stopPropagation()}
-              aria-label="Cerrar obra"
-            >
-              <span aria-hidden="true">×</span>
-            </button>
             <div
               className={styles.artFrame}
-              ref={artFrameRef}
-              style={{ aspectRatio: `${selected.origin.width} / ${selected.origin.height}` }}
+              style={{
+                width: `${selected.origin.width * travel.scale}px`,
+                height: `${selected.origin.height * travel.scale}px`,
+              }}
               aria-hidden="true"
             />
             <div className={`${styles.description} ${arrived ? styles.descriptionReady : ''}`}>
