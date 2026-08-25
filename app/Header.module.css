@@ -9,10 +9,17 @@
   display: flex;
   align-items: center;
   padding: 0 clamp(1.25rem, 4vw, 3.5rem);
-  justify-content: end;
+  justify-content: space-between;
+  gap: 2rem;
 }
 
+/*
+ * El nav entra recién cuando el título terminó de pintarse: 20 letras a 88 ms
+ * más lo que tarda la última en secarse.
+ */
 .nav {
+  opacity: 0;
+  animation: entra 0.9s ease-out 3.1s forwards;
   display: flex;
   align-items: center;
   gap: clamp(1.75rem, 5vw, 4.5rem);
@@ -49,6 +56,11 @@
   outline-offset: 6px;
 }
 
+@keyframes entra {
+  to { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .item { transition: none; }
+  .nav { opacity: 1; animation: none; }
 }

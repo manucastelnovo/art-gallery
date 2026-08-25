@@ -1,0 +1,61 @@
+.titulo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.001em;
+  margin: 0;
+  /* la caja de referencia: todo lo demás se mide en em contra esto */
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  height: 1.15em;
+}
+
+.espacio {
+  width: 0.42em;
+}
+
+/*
+ * Cada letra es una pincelada suya recortada de la portada. Dos máscaras
+ * superpuestas: la forma de la letra y un barrido que la va descubriendo.
+ * `intersect` deja solo lo que está en las dos, así el barrido pinta dentro
+ * de la letra en vez de taparla con un rectángulo.
+ */
+.letra {
+  display: block;
+  flex: 0 0 auto;
+  width: calc(var(--w) * 1em);
+  height: calc(var(--h) * 1em);
+  /* su renglón es desparejo: cada letra baja lo que bajaba en el original */
+  margin-top: calc(var(--dy) * 1em);
+  background-color: var(--negro);
+
+  -webkit-mask-image: var(--src), linear-gradient(174deg, #000 44%, transparent 60%);
+  mask-image: var(--src), linear-gradient(174deg, #000 44%, transparent 60%);
+  -webkit-mask-size: 100% 100%, 100% 300%;
+  mask-size: 100% 100%, 100% 300%;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+
+  /* arranca sin pintar: el barrido está por encima del alcance de la letra */
+  -webkit-mask-position: 0 0, 0 100%;
+  mask-position: 0 0, 0 100%;
+
+  /* quiero que simule como si fuera que estoy escribiendo las letras */
+  animation: pintar 0.34s cubic-bezier(0.4, 0.75, 0.5, 1) forwards;
+  animation-delay: calc(var(--i) * 150ms);
+}
+
+@keyframes pintar {
+  to {
+    -webkit-mask-position: 0 0, 0 0;
+    mask-position: 0 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letra {
+    animation: none;
+    -webkit-mask-position: 0 0, 0 0;
+    mask-position: 0 0, 0 0;
+  }
+}

@@ -1,3 +1,4 @@
+import Titulo from './Titulo'
 import styles from './Header.module.css'
 
 /*
@@ -8,8 +9,8 @@ import styles from './Header.module.css'
  */
 const ITEMS = [
   { label: 'Home', href: '/', src: '/nav/home.png', ar: 2.725 },
-  { label: 'About me', href: '/about', src: '/nav/about.png', ar: 5.427 },
-  { label: 'Gallery', href: '/gallery', src: '/nav/gallery.png', ar: 4.454 },
+  // { label: 'About me', href: '/about', src: '/nav/about.png', ar: 5.427 },
+  // { label: 'Gallery', href: '/gallery', src: '/nav/gallery.png', ar: 4.454 },
 ]
 
 export default function Header() {
@@ -18,15 +19,16 @@ export default function Header() {
       <nav className={styles.nav}>
         {ITEMS.map(({ label, href, src, ar }) => (
           <a
-            key={href}
-            href={href}
-            className={styles.item}
-            style={{ '--ar': ar, '--src': `url(${src})` }}
+          key={href}
+          href={href}
+          className={styles.item}
+          style={{ '--ar': ar, '--src': `url(${src})` }}
           >
             <span className="sr-only">{label}</span>
           </a>
         ))}
       </nav>
+        <Titulo />
     </header>
   )
 }
