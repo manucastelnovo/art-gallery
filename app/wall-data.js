@@ -26,7 +26,7 @@ export const PIECES = [
   {
     "src": "/wall/p3.webp",
     "alt": "La portada de la serie: \"Los colores de la sombra\" escrito a mano sobre naranja",
-    "left": 60.417,
+    "left": 55.417,
     "top": 2.103,
     "width": 30.083,
     "rot": -0.9,
@@ -37,7 +37,7 @@ export const PIECES = [
   {
     "src": "/wall/p4.webp",
     "alt": "Una pared con cuadritos familiares y la luz de la ventana cruzando en diagonal",
-    "left": 90.562,
+    "left": 88.562,
     "top": -2.184,
     "width": 28.958,
     "rot": 1.6,
