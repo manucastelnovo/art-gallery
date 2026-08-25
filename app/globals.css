@@ -1,0 +1,68 @@
+:root {
+  /* Muestreados de su propia pintura (dibujos/header.png) */
+  --negro: #151410;
+  --naranja: #9a5e2d;
+
+  /* Una sola fuente para el alto del header: la usan la barra y el fondo,
+     así el collage entra justo debajo y nunca queda tapado. */
+  --nav-item-h: clamp(1.4rem, 2.6vw, 2.1rem);
+  --header-pad: 1.75rem;
+  --header-h: calc(var(--nav-item-h) + var(--header-pad) * 2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  /* El gris de la pared del propio cuadro: lo que rodea al collage cuando no
+     llega a cubrir la pantalla, y el color de reserva mientras carga. */
+  background: #8e867c;
+}
+
+body {
+  min-height: 100vh;
+  background: transparent;
+}
+
+/*
+ * El collage va en un pseudo-elemento fijo, no en background-attachment: fixed,
+ * que en Safari de iOS no funciona y da saltos al scrollear.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: var(--header-h) 0 0 0;
+  z-index: -1;
+  background-image: image-set(
+    url('/bg/collage-1400.webp') 1x,
+    url('/bg/collage-2000.webp') 2x
+  );
+  background-position: center;
+  background-repeat: no-repeat;
+  /* El collage es apaisado (16:9): en pantallas anchas llena sin recortar casi
+     nada. */
+  background-size: cover;
+}
+
+/* En vertical, `cover` dejaría fuera cuatro de las ocho obras. Ahí conviene
+   verlo entero aunque sobre pared arriba y abajo. */
+@media (orientation: portrait) {
+  body::before {
+    background-size: contain;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

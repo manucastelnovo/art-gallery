@@ -1,0 +1,49 @@
+.header {
+  
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+  justify-content: end;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.75rem, 5vw, 4.5rem);
+}
+
+/*
+ * Cada palabra es una máscara con sus propias pinceladas: el PNG aporta la
+ * forma (alpha) y el color lo pone el CSS, así el naranja es un token y no
+ * está quemado en la imagen.
+ */
+.item {
+  display: block;
+  height: var(--nav-item-h);
+  aspect-ratio: var(--ar);
+  background-color: var(--negro);
+  -webkit-mask-image: var(--src);
+  mask-image: var(--src);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: background-color 0.25s ease;
+}
+
+.item:hover,
+.item:focus-visible {
+  background-color: #c07a3c;
+}
+
+.item:focus-visible {
+  outline: 2px solid #c07a3c;
+  outline-offset: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item { transition: none; }
+}
