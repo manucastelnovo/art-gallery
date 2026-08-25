@@ -1,5 +1,6 @@
 .wall {
   position: fixed;
+  isolation: isolate;
   /* Llega hasta arriba: el header flota encima sin fondo propio, así la pared
      se ve a través de él. */
   inset: 0;
@@ -37,12 +38,10 @@
  */
 .inner {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  translate: -50% -50%;
+  inset: 0;
+  margin: auto;
   aspect-ratio: 2400 / 1350;
   /* Las sombras se miden en cqw para que escalen con la pared. */
-  container-type: inline-size;
 }
 
 @media (min-aspect-ratio: 2400 / 1350) {
@@ -70,6 +69,10 @@
 
 .piece {
   position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   display: block;
   height: auto;
   rotate: var(--rest);
@@ -85,12 +88,173 @@
    * se despega de la pared durante el vaiven.
    */
   filter: drop-shadow(
-    calc(var(--sx) * 1cqw * (1 + var(--lift) * 0.6))
-    calc(var(--sy) * 1cqw * (1 + var(--lift) * 0.6))
-    calc(var(--sb) * 1cqw * (1 + var(--lift) * 0.9))
+    calc(var(--sx) * 1vw * (1 + var(--lift) * 0.6))
+    calc(var(--sy) * 1vw * (1 + var(--lift) * 0.6))
+    calc(var(--sb) * 1vw * (1 + var(--lift) * 0.9))
     rgba(32, 25, 18, 0.5)
   );
   will-change: rotate, filter;
+}
+
+.piece img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.piece:focus-visible {
+  outline: 3px solid #e8c46c;
+  outline-offset: 8px;
+}
+
+.lifted {
+  position: fixed;
+  z-index: 1001;
+  left: var(--origin-left) !important;
+  top: var(--origin-top) !important;
+  width: var(--origin-width) !important;
+  pointer-events: none;
+  transform-origin: center center;
+  animation: liftToViewer 1.4s linear both;
+}
+
+.returningPiece {
+  animation-direction: reverse;
+}
+
+.viewer {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: transparent;
+  pointer-events: none;
+}
+
+:global(body.viewer-open header) {
+  pointer-events: none;
+}
+
+.viewerReady {
+  background: rgba(12, 10, 8, 0.82);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  pointer-events: auto;
+  animation: viewerIn 240ms ease-out both;
+}
+
+.transitioning .piece {
+  pointer-events: none;
+}
+
+.viewerClosing {
+  animation: viewerOut 1.4s linear both;
+}
+
+.selectedWork {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(88vw, 48rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  animation: workIn 720ms ease-out both;
+}
+
+.artFrame {
+  display: grid;
+  place-items: center;
+  max-width: 100%;
+  max-height: 60dvh;
+}
+
+.description {
+  width: min(100%, 38rem);
+  margin-top: 6rem;
+  padding: 1rem 0 0.25rem;
+  color: #f5e8c8;
+  opacity: 0;
+}
+
+.descriptionReady {
+  animation: descriptionIn 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.kicker {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #e8c46c;
+  font: 0.68rem/1.2 monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.description p {
+  max-width: 36rem;
+  font: clamp(1rem, 2vw, 1.35rem)/1.35 Georgia, serif;
+}
+
+@media (max-width: 600px) {
+  .hang {
+    top: calc(var(--header-h) + 0.5rem);
+  }
+
+  .inner {
+    width: auto;
+    height: 100%;
+  }
+
+  .selectedWork {
+    width: min(92vw, 30rem);
+  }
+
+  .artFrame {
+    max-height: 55dvh;
+  }
+
+  .description {
+    margin-top: 6rem;
+    padding-top: 0.75rem;
+  }
+
+  .description p {
+    font-size: 1rem;
+  }
+}
+
+@keyframes viewerIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes viewerOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes workIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes liftToViewer {
+  from {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  /* 35% {
+    transform: translate(calc(var(--travel-x) * 0.7), calc(var(--travel-y) * 0.74)) scale(calc(var(--travel-scale) * 1.04)) rotate(2deg);
+  } */
+  68% {
+    transform: translate(calc(var(--travel-x) * 0.18), calc(var(--travel-y) * 0.15)) scale(var(--travel-scale)) rotate(0.8deg);
+  }
+  to { transform: translate(var(--travel-x), var(--travel-y)) scale(var(--travel-scale)) rotate(0deg); }
+}
+
+@keyframes descriptionIn {
+  from { transform: translateY(0.8rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* Registrado para que interpole suave; sin esto saltaria de 0 a 1. */

@@ -7,8 +7,9 @@
   /* Una sola fuente para el alto del header: la usan la barra y la pared,
      así los cuadros entran justo debajo y ninguno queda tapado. */
   --nav-item-h: clamp(1.4rem, 2.6vw, 2.1rem);
-  --header-pad: 1.75rem;
-  --header-h: calc(var(--nav-item-h) + var(--header-pad) * 2);
+  --title-h: clamp(1.5rem, 3vw, 2.3rem);
+  --header-pad: 1.5rem;
+  --header-h: calc(var(--title-h) * 1.15 + var(--header-pad) * 2);
 }
 
 * {
@@ -20,11 +21,13 @@
 html {
   min-height: 100%;
   background: var(--pared);
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100vh;
   background: transparent;
+  overflow-x: hidden;
 }
 
 /* El contenido va sobre la pared; los cuadros quedan tocables donde no lo tape. */
